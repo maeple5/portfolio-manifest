@@ -1,0 +1,123 @@
+django: 
+  deployment: 
+    name: <DEPLOYMENT_NAME>
+    replicas: <REPLICAS>
+    image:
+      repository: null
+      tag: null
+      pullPolicy: IfNotPresent
+    containerPort: 8000
+    protocol: TCP
+    resources:
+        requests:
+          memory: 10Mi
+          cpu: 50m
+        limits:
+          memory: 550Mi
+          cpu: 2
+    command: "python manage.py makemigrations && python manage.py migrate"
+
+    cloudsql: 
+      name: cloud-sql-proxy
+      image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.1.0
+      args: 
+        arg1: '- "--private-ip"'
+        arg2: '- "--structured-logs"'
+        arg3: '- "--port=5432"'
+        arg4: '- "<PROJECT_ID>:<LOCATION>:<SQL_INSTANCE_NAME>"'
+      resources:
+        requests:
+          memory: 10Mi
+          cpu: 50m
+        limits:
+          memory: 550Mi
+          cpu: 2
+
+  configMap:
+    name: django-config
+    debug: False
+    allowedHosts: django
+    csrfTrustedOrigins: http://localhost:3000
+    corsOriginWhitelist: http://localhost:8000
+    dbHost: localhost
+    dbPort: 5432
+    languageCode: ja
+    timeZone: Asia/Tokyo
+    djangoSettingsModule: config.settings.production
+    googleCloudProject: <PROJECT_ID>
+    secureSslRedirect: False
+    useCloudSqlAuthProxy: True
+    settingsName: django_settings
+
+  service:
+    name: django-service
+    label:
+      app: <APP_NAME>
+    protocol: TCP
+    port: 80
+    targetPort: 8000
+    
+serviceAccount: 
+  name: <KUBERNETES_SERVICE_ACCOUNT_NAME>
+  gsaName: <GOOGLE_SERVICE_ACCOUNT_NAME>
+
+node: 
+  deployment:
+    name: <DEPLOYMENT_NAME>
+    replicas: <REPLICAS>
+    image:
+      repository: null
+      tag: null
+      pullPolicy: IfNotPresent
+    containerPort: 3000
+    resources:
+      requests:
+        memory: 10Mi
+        cpu: 50m
+      limits:
+        memory: 550Mi
+        cpu: 2
+    volume: 
+      name: conf
+      mountPath: /etc/nginx/conf.d/
+    command: ["/usr/sbin/nginx","-s","quit"]
+
+  service:
+    name: <SERVICE_NAME>
+    label:
+      app: <APP_NAME>
+    type: LoadBalancer
+    protocol: TCP
+    port: 80
+    targetPort: 80
+
+nginxConf:
+  name: nginx-config
+nginxConfOverride: ""
+  # # This example adds configuration for external auth e.g. via oauth2-proxy
+  # # It also demonstrates templating in another arbitrary value (authRoles)
+  # # to create a map of external users to rundeck roles
+  # events {
+  #   worker_connections  1024;
+  # }
+  # http {
+  #   map $http_x_forwarded_user $x_forwarded_roles {
+  # {{- .Values.authRoles | nindent 4 }}
+  #   }
+  #   server {
+  #     location /metrics/ {
+  #       proxy_pass http://localhost:4440;
+  #       proxy_set_header Host $http_host;
+  #       proxy_set_header X-Forwarded-User metrics;
+  #       proxy_set_header X-Forwarded-Roles user;
+  #     }
+  #     location / {
+  #       recursive_error_pages on;
+  #       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  #       proxy_set_header X-Forwarded-Proto $scheme;
+  #       proxy_set_header X-Forwarded-Roles $x_forwarded_roles;
+  #       proxy_set_header User-Agent $http_user_agent;
+  #       proxy_pass http://localhost:4440;
+  #     }
+  #   }
+  # }

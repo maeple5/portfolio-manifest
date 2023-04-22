@@ -1,0 +1,12 @@
+django:  
+  deployment: 
+    replicas: 1
+    image:
+      repository: us-central1-docker.pkg.dev/sample-project-id/prod-repo/django-image
+      tag: "91f17dca5b64c1933d7619a78413f4f2df91de98"
+node:
+  deployment:
+    replicas: 1
+    image:
+      repository: us-central1-docker.pkg.dev/sample-project-id/prod-repo/node-image
+      tag: "e4d237219927ffc43377777ea43c241aafb2a602"

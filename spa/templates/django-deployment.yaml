@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.django.deployment.name }}
+spec:
+  replicas: {{ .Values.django.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.django.service.label.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.django.service.label.app }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      containers:
+      - name: {{ .Values.django.service.label.app }}
+        image: {{ .Values.django.deployment.image.repository }}:{{ .Values.django.deployment.image.tag }}
+        imagePullPolicy: {{ .Values.django.deployment.image.pullPolicy }}
+        ports:
+        - containerPort: !!int {{ .Values.django.deployment.containerPort }}
+          protocol: {{ .Values.django.deployment.protocol }}
+        resources:
+          requests: 
+            memory: {{ .Values.django.deployment.resources.requests.memory }}
+            cpu: {{ .Values.django.deployment.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.django.deployment.resources.limits.memory }}
+            cpu: {{ .Values.django.deployment.resources.limits.cpu }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.django.configMap.name }}
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - sh
+                - -c
+                - {{ .Values.django.deployment.command }}
+                
+      - name: {{ .Values.django.deployment.cloudsql.name }}
+        # It is recommended to use the latest version of the Cloud SQL Auth Proxy
+        # Make sure to update on a regular schedule!
+        image: {{ .Values.django.deployment.cloudsql.image }}
+        args:
+          # If connecting from a VPC-native GKE cluster, you can use the
+          # following flag to have the proxy connect over private IP
+          {{ .Values.django.deployment.cloudsql.args.arg1 }}
+
+          # Enable structured logging with LogEntry format:
+          {{ .Values.django.deployment.cloudsql.args.arg2 }}
+
+          # Replace DB_PORT with the port the proxy should listen on
+          {{ .Values.django.deployment.cloudsql.args.arg3 }}
+          {{ .Values.django.deployment.cloudsql.args.arg4 }}
+
+        securityContext:
+          # The default Cloud SQL Auth Proxy image runs as the
+          # "nonroot" user and group (uid: 65532) by default.
+          runAsNonRoot: true
+        # You should use resource requests/limits as a best practice to prevent
+        # pods from consuming too many resources and affecting the execution of
+        # other pods. You should adjust the following values based on what your
+        # application needs. For details, see
+        # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+        resources:
+          requests:
+            memory: {{ .Values.django.deployment.cloudsql.resources.requests.memory }}
+            cpu: {{ .Values.django.deployment.cloudsql.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.django.deployment.cloudsql.resources.limits.memory }}
+            cpu: {{ .Values.django.deployment.cloudsql.resources.limits.cpu }}
+          # requests:
+          #   # The proxy's memory use scales linearly with the number of active
+          #   # connections. Fewer open connections will use less memory. Adjust
+          #   # this value based on your application's requirements.
+          #   memory: "400Mi"
+          #   # The proxy's CPU use scales linearly with the amount of IO between
+          #   # the database and the application. Adjust this value based on your
+          #   # application's requirements.
+          #   cpu:    "300m"

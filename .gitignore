@@ -1,0 +1,6 @@
+secret.env
+configmap.env
+memo.txt
+develop.yaml
+production.yaml
+values.yaml

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.node.deployment.name }}
+spec:
+  replicas: {{ .Values.node.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.node.service.label.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.node.service.label.app }}
+    spec:
+      containers:
+      - name: {{ .Values.node.service.label.app }}
+        image: {{ .Values.node.deployment.image.repository }}:{{ .Values.node.deployment.image.tag }}
+        imagePullPolicy: {{ .Values.node.deployment.image.pullPolicy }}
+        resources:
+          requests:
+            memory: {{ .Values.node.deployment.resources.requests.memory }}
+            cpu: {{ .Values.node.deployment.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.node.deployment.resources.limits.memory }}
+            cpu: {{ .Values.node.deployment.resources.limits.cpu }}
+        ports:
+        - containerPort: !!int {{ .Values.node.deployment.containerPort }}
+        lifecycle:
+          preStop:
+            exec:
+              command: {{ .Values.node.deployment.command }}
+        volumeMounts:
+        - name: {{ .Values.node.deployment.volume.name }}
+          mountPath: {{ .Values.node.deployment.volume.mountPath }}
+      volumes:
+        - name: {{ .Values.node.deployment.volume.name }}
+          configMap:
+            name: {{ .Values.nginxConf.name }}

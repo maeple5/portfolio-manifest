@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: django-config
+data:
+  DEBUG: {{ quote .Values.django.configMap.debug }}
+  ALLOWED_HOSTS: {{ .Values.django.configMap.allowedHosts }}
+  CSRF_TRUSTED_ORIGINS: {{ .Values.django.configMap.csrfTrustedOrigins }}
+  CORS_ORIGIN_WHITELIST: {{ .Values.django.configMap.corsOriginWhitelist }}
+  DB_HOST: {{ .Values.django.configMap.dbHost }}
+  DB_PORT: {{ quote .Values.django.configMap.dbPort }}
+  LANGUAGE_CODE: {{ .Values.django.configMap.languageCode }}
+  TIME_ZONE: {{ .Values.django.configMap.timeZone }}
+  DJANGO_SETTINGS_MODULE: {{ .Values.django.configMap.djangoSettingsModule }}
+  GOOGLE_CLOUD_PROJECT: {{ .Values.django.configMap.googleCloudProject }}
+  SECURE_SSL_REDIRECT: {{ quote .Values.django.configMap.secureSslRedirect }}
+  USE_CLOUD_SQL_AUTH_PROXY: {{ quote .Values.django.configMap.useCloudSqlAuthProxy }}
+  SETTINGS_NAME: {{ .Values.django.configMap.settingsName }}
